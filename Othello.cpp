@@ -6,8 +6,13 @@
 #include <exception>
 #include <string>
 #include <cctype>
+#include <vector>
 
 using namespace std;
+
+/********************************************************
+* Board Class
+********************************************************/
 
 class Board {
 	int squares[8][8];
@@ -145,15 +150,212 @@ int Board::get_square(int row, int col) {
 	return squares[row-1][col-1];
 }
 
-bool make_simple_cpu_move(Board * b, int cpuval) {
-	for(int i=1; i<9;i++)
-		for(int j=1; j<9; j++)
-			if(b->get_square(i, j)==0)
-				if(b->play_square(i, j, cpuval)) 
-					return true;
-	cout << "Computer passes." << endl;
-	return false;
+/********************************************************
+* Function Declarations
+********************************************************/
+int minValue(Board*, int, int, int, int);
+int maxValue(Board*, int, int, int, int);
+void play();
+bool make_simple_cpu_move(Board*, int);
+bool cpu_MiniMax_Move(Board*, int);
+
+/********************************************************
+* Min / Max Functions
+********************************************************/
+
+int minValue(Board* b, int cpuval, int alpha, int beta, int depth){
+
+	/* Set opponent to have the opposite value of the CPU
+	 * e.g. if CPU is Black, opponent is White */
+	int oppoval = (cpuval * -1);
+
+	// if termininumal case, return utility
+	if(b->full_board() || (!b->has_valid_move(cpuval) && !b->has_valid_move(oppoval)) ||depth > 2)
+	{
+		/* IF CPU is Black, return result of score function */
+		if(cpuval == 1) return b->score();
+		/* If CPU is White, return opposite of score function */
+		else return (b->score() * -1);
+	}
+
+	// if no valid move exists for the oponent, let the cpu play again
+	else if(!b->has_valid_move(oppoval))
+	{
+		return maxValue(b, cpuval, alpha, beta, depth + 1);
+	}
+
+	// otherwise, recursive call to maxValue for all successors
+	else
+	{
+		/* Create a vector of possible boards */
+		vector <Board*> test;
+		/* Create a counter for the number of boards attempted */
+		int count = 0;
+		/* t is the value returned after trying a test move */
+		int t;
+		/* Min is the current mininumimum value returned */
+		int mininum = 100;
+		for(int i=1; i<9; i++){
+			for(int j=1; j<9; j++){
+				/* If a move is valid, try it */
+				if(b->move_is_valid(i, j, oppoval)){
+					/* Coppy current board into the array */
+					test.push_back(new Board(*b)); //may not work because test is a vector
+					/* Play in the free square */
+					test[count]->play_square(i, j, oppoval);
+					/* Print current board */
+					//cout << test[count]->toString();
+					/* Find the maximumimum value from playing in the given square */
+					t = maxValue(test[count], cpuval, alpha, beta, depth + 1);
+					/* If the current value t is less than the mininumimum value
+					 * t is the new mininumimum value */
+					if(t < mininum)
+					{
+						mininum = t;
+						if (mininum <= alpha)
+							return mininum;
+						beta = min(beta, mininum);
+					}
+					count++;
+				}
+			}
+		}
+		/* Delete all of the test boards */
+		for(int k=0; k<count; k++)
+		{
+			delete test[k];
+		}
+		/* Return the mininumimum value */
+		return mininum;
+	}
 }
+
+int maxValue(Board* b, int cpuval, int alpha, int beta, int depth){
+	// if termininumal case, return utility
+	if(b->full_board() || (!b->has_valid_move(1) && !b->has_valid_move(-1)) || depth > 2)
+	{
+		/* IF CPU is Black, return result of score function */
+		if(cpuval == 1) return b->score();
+		/* If CPU is White, return opposite of score function */
+		else return (b->score() * -1);
+	}
+
+	// if no valid move exists for the cpu, let the opponent play again
+	else if(!b->has_valid_move(cpuval))
+	{
+		return minValue(b, cpuval, alpha, beta, depth + 1);
+	}
+
+	// otherwise, recursive call to minValue for all successors
+	else
+	{
+		/* Create a vector of possible boards */
+		vector <Board*> test;
+		/* Create a counter for the number of boards attempted */
+		int count = 0;
+		/* t is the value returned after trying a test move */
+		int t;
+		/* Max is the current maximumimum value returned */
+		int maximum = -100;
+		for(int i=1; i<9; i++){
+			for(int j=1; j<9; j++){
+				/* If a move is valid, try it */
+				if(b->move_is_valid(i, j, cpuval)){
+					/* Copy current board into the array */
+					test.push_back(new Board(*b));
+					/* Play in the free square */
+					test[count]->play_square(i, j, cpuval);
+					/* Print current board */
+					//cout << test[count]->toString();
+					/* Find the mininumimum value from playing in the given square */
+					t = minValue(test[count], cpuval, alpha, beta, depth + 1);
+					/* If the current value t is greater than the maximumimum value
+					 * t is the new maximumimum value */
+					if(t > maximum) 
+					{
+						maximum = t;
+						if (maximum >= beta)
+							return maximum;
+						alpha = max(alpha, maximum);
+					}
+					count++;
+				}
+			}
+		}
+		/* Delete all of the test boards */
+		for(int k=0; k<count; k++)
+		{
+			delete test[k];
+		}
+		/* Return the maximumimum value */
+		return maximum;
+	}
+}
+
+/********************************************************
+* CPU Move Function
+********************************************************/
+bool cpu_MiniMax_Move(Board* b, int cpuval){
+
+	if(!b->has_valid_move(cpuval))
+	{
+		cout << "Computer passes." << endl;
+		return false;
+	}
+
+	/* Set initial alpha and beta */
+	int alpha = -100;
+	int beta = 100;
+	/* Create a vector of possible boards */
+	vector <Board*> test;
+	/* Create a counter for the number of boards attempted */
+	int count = 0;
+	/* Max is the current maximumimum value returned */
+	int maximum = -100;
+	/* t is the value returned after trying a test move */
+	int t;
+	/* Move stores the current best possible move */
+	int move[2];
+	
+	//get minValue for every possible move
+	for(int i=1; i<9; i++){
+		for(int j=1; j<9; j++){
+			/* If a square is empty, try to play there */
+			if(b->move_is_valid(i, j, cpuval)){
+				/* Copy current board into the vector */
+				test.push_back(new Board(*b));
+				/* Play in the free square */
+				test[count]->play_square(i, j, cpuval);
+				/* Find the mininumimum value from playing in the given square */
+				t = minValue(test[count], cpuval, alpha, beta, 1);
+				//if minValue for a move is greater than current maximum,
+				//CPU will make that move
+				if(t > maximum)
+				{
+					maximum = t;
+					move[0] = i;
+					move[1] = j;
+					if (maximum >= beta)
+					{
+						b->play_square(move[0], move[1], cpuval);
+						return true;
+					}
+					alpha = max(alpha, maximum);
+				}
+				count++;
+			}
+		}
+	}
+	/* Delete all of the test boards */
+	for(int k=0; k<count; k++) delete test[k];
+	//CPU making move
+	b->play_square(move[0], move[1], cpuval);
+	return true;
+}
+
+/********************************************************
+* Play Function
+********************************************************/
 
 void play() {
 	Board * b = new Board();
@@ -197,7 +399,7 @@ void play() {
 			break;
 		else {
 			cout << b->toString() << "..." << endl;
-			if(make_simple_cpu_move(b, cpuPlayer))
+			if(cpu_MiniMax_Move(b, cpuPlayer))
 				consecutivePasses=0;
 			else
 				consecutivePasses++;
@@ -215,9 +417,27 @@ void play() {
 	cin >> a;
 }
 
+/********************************************************
+* Main Function
+********************************************************/
+
 int main(int argc, char * argv[])
 {
 	play();
 	return 0;
+}
+
+/********************************************************
+* Old Functions (To Be Deleted)
+********************************************************/
+
+bool make_simple_cpu_move(Board * b, int cpuval) {
+	for(int i=1; i<9;i++)
+		for(int j=1; j<9; j++)
+			if(b->get_square(i, j)==0)
+				if(b->play_square(i, j, cpuval)) 
+					return true;
+	cout << "Computer passes." << endl;
+	return false;
 }
 
