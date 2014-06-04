@@ -1,10 +1,10 @@
 // TicTacToe.cpp : Defines the entry point for the console application.
 //
 
-#include<iostream>
-#include<sstream>
+#include <iostream>
+#include <sstream>
 #include <exception>
-#include<string>
+#include <string>
 #include <cctype>
 
 using namespace std;
