@@ -3,5 +3,4 @@ Othello.dSYM
 .DS_Store
 TeamMoop.o
 TeamMoop.dSYM
-MatchMaking.cpp
 MatchMaking.o
