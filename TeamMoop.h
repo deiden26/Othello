@@ -21,8 +21,8 @@ public:
 /********************************************************
 * Function Declarations
 ********************************************************/
-int minValue(Moop*, int, int, int, clock_t);
-int maxValue(Moop*, int, int, int, clock_t);
+int minValue(Moop*, int, int, int, clock_t, int, int);
+int maxValue(Moop*, int, int, int, clock_t, int, int);
 void play();
 bool make_simple_cpu_move(Moop*, int);
 bool cpu_MiniMax_Move(Moop*, int);
