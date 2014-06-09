@@ -23,6 +23,9 @@ Moop::Moop() {
 	squares[4][4]=-1;
 	squares[3][4]=1;
 	squares[4][3]=1;
+	cpuValue = 0;
+	opponentValue = 0;
+	isEmpty = true;
 }
 
 string Moop::toString() {
@@ -111,7 +114,25 @@ bool Moop::play_square(int row, int col, int val) {
 //executes move if it is valid. Returns false and does not update board otherwise
 //Makes computer make its move and returns the computer's move in row, and col
 bool Moop::play_square(int &row, int &col){
-    return true;
+	if (row != 0 && col != 0) {
+		// Play for the computer 
+		if (isEmpty) {
+			isEmpty = false;
+			cpuValue = -1;
+			opponentValue = 1;
+		}
+		play_square(row, col, opponentValue);
+		//cout << toString();
+		//cout << "..." << endl;
+	}
+	// Now make your move 
+	if (isEmpty) {
+		isEmpty = false; 
+		cpuValue = 1;
+		opponentValue = -1;
+	}
+
+    return cpu_MiniMax_Move(this, cpuValue, row, col);
 }
 
 bool Moop::full_board() {
@@ -175,7 +196,7 @@ int minValue(Moop* b, int cpuval, int alpha, int beta, int depth){
 			for(int j=1; j<9; j++){
 				/* If a move is valid, try it */
 				if(b->move_is_valid(i, j, oppoval)){
-					/* Coppy current board into the array */
+					/* Copy current board into the array */
 					test.push_back(new Moop(*b)); //may not work because test is a vector
 					/* Play in the free square */
 					test[count]->play_square(i, j, oppoval);
@@ -271,11 +292,13 @@ int maxValue(Moop* b, int cpuval, int alpha, int beta, int depth){
 /********************************************************
 * CPU Move Function
 ********************************************************/
-bool cpu_MiniMax_Move(Moop* b, int cpuval){
+bool cpu_MiniMax_Move(Moop* b, int cpuval, int &row, int &col){
 
 	if(!b->has_valid_move(cpuval))
 	{
 		cout << "Computer passes." << endl;
+		row = -1; 
+		col = -1;
 		return false;
 	}
 
@@ -314,6 +337,8 @@ bool cpu_MiniMax_Move(Moop* b, int cpuval){
 					if (maximum >= beta)
 					{
 						b->play_square(move[0], move[1], cpuval);
+						row = move[0];
+						col = move[1];
 						return true;
 					}
 					alpha = max(alpha, maximum);
@@ -326,6 +351,8 @@ bool cpu_MiniMax_Move(Moop* b, int cpuval){
 	for(int k=0; k<count; k++) delete test[k];
 	//CPU making move
 	b->play_square(move[0], move[1], cpuval);
+	row = move[0];
+	col = move[1];
 	return true;
 }
 
@@ -335,6 +362,7 @@ bool cpu_MiniMax_Move(Moop* b, int cpuval){
 
 void play() {
 	Moop * b = new Moop();
+	int test1, test2;
 	int humanPlayer = 1;
 	int cpuPlayer = -1;
 
@@ -375,7 +403,7 @@ void play() {
 			break;
 		else {
 			cout << b->toString() << "..." << endl;
-			if(cpu_MiniMax_Move(b, cpuPlayer))
+			if(cpu_MiniMax_Move(b, cpuPlayer, test1, test2))
 				consecutivePasses=0;
 			else
 				consecutivePasses++;
@@ -397,11 +425,11 @@ void play() {
 * Main Function
 ********************************************************/
 
-int main(int argc, char * argv[])
+/*int main(int argc, char * argv[])
 {
 	play();
 	return 0;
-}
+} */
 
 /********************************************************
 * Old Functions (To Be Deleted)
