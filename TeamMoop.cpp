@@ -131,8 +131,11 @@ bool Moop::play_square(int &row, int &col){
 		cpuValue = 1;
 		opponentValue = -1;
 	}
-
-    return cpu_MiniMax_Move(this, cpuValue, row, col);
+	if (!full_board()) {
+		return cpu_MiniMax_Move(this, cpuValue, row, col);
+	} 
+	else return false;
+    
 }
 
 bool Moop::full_board() {
