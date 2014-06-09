@@ -7,6 +7,7 @@
 #include <string>
 #include <cctype>
 #include <vector>
+#include <ctime>
 #include "TeamMoop.h"
 
 using namespace std;
@@ -139,14 +140,16 @@ int Moop::get_square(int row, int col) {
 * Min / Max Functions
 ********************************************************/
 
-int minValue(Moop* b, int cpuval, int alpha, int beta, int depth){
+int minValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim){
 
 	/* Set opponent to have the opposite value of the CPU
 	 * e.g. if CPU is Black, opponent is White */
 	int oppoval = (cpuval * -1);
 
+	float e_tim = ((float)clock()-tim)/CLOCKS_PER_SEC;
+
 	// if termininumal case, return utility
-	if(b->full_board() || (!b->has_valid_move(cpuval) && !b->has_valid_move(oppoval)) ||depth > 2)
+	if(b->full_board() || (!b->has_valid_move(cpuval) && !b->has_valid_move(oppoval)) || e_tim > 14.95)
 	{
 		/* IF CPU is Black, return result of score function */
 		if(cpuval == 1) return b->score();
@@ -157,7 +160,7 @@ int minValue(Moop* b, int cpuval, int alpha, int beta, int depth){
 	// if no valid move exists for the oponent, let the cpu play again
 	else if(!b->has_valid_move(oppoval))
 	{
-		return maxValue(b, cpuval, alpha, beta, depth + 1);
+		return maxValue(b, cpuval, alpha, beta, tim);
 	}
 
 	// otherwise, recursive call to maxValue for all successors
@@ -182,7 +185,7 @@ int minValue(Moop* b, int cpuval, int alpha, int beta, int depth){
 					/* Print current board */
 					//cout << test[count]->toString();
 					/* Find the maximumimum value from playing in the given square */
-					t = maxValue(test[count], cpuval, alpha, beta, depth + 1);
+					t = maxValue(test[count], cpuval, alpha, beta, tim);
 					/* If the current value t is less than the mininumimum value
 					 * t is the new mininumimum value */
 					if(t < mininum)
@@ -206,9 +209,10 @@ int minValue(Moop* b, int cpuval, int alpha, int beta, int depth){
 	}
 }
 
-int maxValue(Moop* b, int cpuval, int alpha, int beta, int depth){
+int maxValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim){
 	// if termininumal case, return utility
-	if(b->full_board() || (!b->has_valid_move(1) && !b->has_valid_move(-1)) || depth > 2)
+	float e_tim = ((float)clock()-tim)/CLOCKS_PER_SEC;
+	if(b->full_board() || (!b->has_valid_move(1) && !b->has_valid_move(-1)) || e_tim > 14.95)
 	{
 		/* IF CPU is Black, return result of score function */
 		if(cpuval == 1) return b->score();
@@ -219,7 +223,7 @@ int maxValue(Moop* b, int cpuval, int alpha, int beta, int depth){
 	// if no valid move exists for the cpu, let the opponent play again
 	else if(!b->has_valid_move(cpuval))
 	{
-		return minValue(b, cpuval, alpha, beta, depth + 1);
+		return minValue(b, cpuval, alpha, beta, tim);
 	}
 
 	// otherwise, recursive call to minValue for all successors
@@ -244,7 +248,7 @@ int maxValue(Moop* b, int cpuval, int alpha, int beta, int depth){
 					/* Print current board */
 					//cout << test[count]->toString();
 					/* Find the mininumimum value from playing in the given square */
-					t = minValue(test[count], cpuval, alpha, beta, depth + 1);
+					t = minValue(test[count], cpuval, alpha, beta, tim);
 					/* If the current value t is greater than the maximumimum value
 					 * t is the new maximumimum value */
 					if(t > maximum) 
@@ -292,6 +296,9 @@ bool cpu_MiniMax_Move(Moop* b, int cpuval){
 	int t;
 	/* Move stores the current best possible move */
 	int move[2];
+
+	//start timer to keep checking under 15 seconds
+	clock_t tim = clock();
 	
 	//get minValue for every possible move
 	for(int i=1; i<9; i++){
@@ -303,7 +310,7 @@ bool cpu_MiniMax_Move(Moop* b, int cpuval){
 				/* Play in the free square */
 				test[count]->play_square(i, j, cpuval);
 				/* Find the mininumimum value from playing in the given square */
-				t = minValue(test[count], cpuval, alpha, beta, 1);
+				t = minValue(test[count], cpuval, alpha, beta, tim);
 				//if minValue for a move is greater than current maximum,
 				//CPU will make that move
 				if(t > maximum)
