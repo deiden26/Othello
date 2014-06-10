@@ -621,11 +621,12 @@ void play() {
 * Main Function
 ********************************************************/
 
-int main(int argc, char * argv[])
+/*int main(int argc, char * argv[])
 {
 	play();
 	return 0;
 } 
+*/
 
 /********************************************************
 * Old Functions (To Be Deleted)
