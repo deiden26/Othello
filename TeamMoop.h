@@ -16,6 +16,8 @@ public:
 	int score();
 	bool full_board();
 	bool has_valid_move(int);
+        float piece_difference();
+        int corner_occupancy();
 };
 
 /********************************************************

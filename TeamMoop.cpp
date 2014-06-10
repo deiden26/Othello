@@ -135,6 +135,42 @@ int Moop::get_square(int row, int col) {
 	return squares[row-1][col-1];
 }
 
+/***************HEURISTIC FUNCTIONS***************************/
+/** heuristics were found at mkorman.org/othello.pdf **/
+
+// returns the piece difference, normalized:
+// if Black has more pieces, the difference is 
+// p = 100 * B / (B + W)
+// where B and W are the number of pieces for each player, respectively
+// if White has more pieces, the difference is
+// p = -100 * W  / (B + W)
+float Moop::piece_difference() {
+        int ySum = 0;
+        int xSum = 0;
+        for (int i = 0; i < 8; i++) {
+                for (int j = 0; j < 8; j++) {
+                        if (squares[i][j] < 0) {
+                                ySum++;
+                        } else {
+                                xSum++;
+                        }
+                }
+        }
+        cout << xSum << ySum << endl;
+        if (xSum > ySum) {
+                return (100.0 * xSum) / (xSum + ySum);
+        } else {
+                return (-100.0 * ySum) / (xSum + ySum);
+        }
+}
+
+// returns the corner occupancy of the board
+// corners cannot be flipped, so they are strong positions
+int Moop::corner_occupancy() {
+       return 25 * (squares[0][0] + squares[0][7] + squares[7][0] + squares[7][7]);
+}
+
+
 /********************************************************
 * Min / Max Functions
 ********************************************************/
@@ -148,6 +184,7 @@ int minValue(Moop* b, int cpuval, int alpha, int beta, int depth){
 	// if termininumal case, return utility
 	if(b->full_board() || (!b->has_valid_move(cpuval) && !b->has_valid_move(oppoval)) ||depth > 2)
 	{
+                cout << b->corner_occupancy();
 		/* IF CPU is Black, return result of score function */
 		if(cpuval == 1) return b->score();
 		/* If CPU is White, return opposite of score function */
