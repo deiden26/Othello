@@ -13,7 +13,7 @@
 
 using namespace std;
 
-#define TIMELIMIT 1
+#define TIMELIMIT 14.9
 bool reachedEnd = false;
 
 
