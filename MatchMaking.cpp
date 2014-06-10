@@ -35,7 +35,7 @@ int main(int argc, char * argv[])
 	bool continueGame[2];
 	continueGame[0] = continueGame[1] = true;
 	timeval start;
-	timeval t;
+	int stop;
 	
 	if (flipBlack)
 	{
@@ -62,6 +62,12 @@ int main(int argc, char * argv[])
 			{
 				break;
 			}
+
+			cout << playerOne->toString();
+			cout << ". . . \n";
+			cout << "Please enter any integer to continue: ";
+			cin >> stop;
+			
 		} while (true);
 	}
 	else
