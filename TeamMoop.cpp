@@ -8,6 +8,7 @@
 #include <cctype>
 #include <vector>
 #include <ctime>
+#include <limits.h>
 #include "TeamMoop.h"
 
 using namespace std;
@@ -434,7 +435,7 @@ int maxValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim, int depth, i
 		/* t is the value returned after trying a test move */
 		int t;
 		/* Max is the current maximumimum value returned */
-		int maximum = -2147483648; //smallest int value
+		int maximum = INT_MIN; //smallest int value
 		for(int i=1; i<9; i++){
 			for(int j=1; j<9; j++){
 				/* If a move is valid, try it */
@@ -484,14 +485,14 @@ bool cpu_MiniMax_Move(Moop* b, int cpuval, int &row, int &col){
 	}
 
 	/* Set initial alpha and beta */
-	int alpha = -2147483648; //smallest int value
+	int alpha = INT_MIN; //smallest int value
 	int beta = 2147483647; //largest int value
 	/* Create a vector of possible boards */
 	vector <Moop*> test;
 	/* Create a counter for the number of boards attempted */
 	int count = 0;
 	/* Max is the current maximumimum value returned */
-	int maximum = -2147483648; //smallest int value
+	int maximum = INT_MIN; //smallest int value
 	/* t is the value returned after trying a test move */
 	int t;
 	/* Move stores the current best possible move */
@@ -619,13 +620,13 @@ void play() {
 /********************************************************
 * Main Function
 ********************************************************/
-/*
+
 int main(int argc, char * argv[])
 {
 	play();
 	return 0;
 } 
-*/
+
 /********************************************************
 * Old Functions (To Be Deleted)
 ********************************************************/
