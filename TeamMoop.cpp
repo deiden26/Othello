@@ -7,6 +7,7 @@
 #include <string>
 #include <cctype>
 #include <vector>
+#include <ctime>
 #include "TeamMoop.h"
 
 using namespace std;
@@ -23,6 +24,9 @@ Moop::Moop() {
 	squares[4][4]=-1;
 	squares[3][4]=1;
 	squares[4][3]=1;
+	cpuValue = 0;
+	opponentValue = 0;
+	isEmpty = true;
 }
 
 string Moop::toString() {
@@ -111,7 +115,28 @@ bool Moop::play_square(int row, int col, int val) {
 //executes move if it is valid. Returns false and does not update board otherwise
 //Makes computer make its move and returns the computer's move in row, and col
 bool Moop::play_square(int &row, int &col){
-    return true;
+	if (row != 0 && col != 0) {
+		// Play for the computer 
+		if (isEmpty) {
+			isEmpty = false;
+			cpuValue = -1;
+			opponentValue = 1;
+		}
+		play_square(row, col, opponentValue);
+		//cout << toString();
+		//cout << "..." << endl;
+	}
+	// Now make your move 
+	if (isEmpty) {
+		isEmpty = false; 
+		cpuValue = 1;
+		opponentValue = -1;
+	}
+	if (!full_board()) {
+		return cpu_MiniMax_Move(this, cpuValue, row, col);
+	} 
+	else return false;
+    
 }
 
 bool Moop::full_board() {
@@ -283,14 +308,16 @@ float Moop::evaluation_output() {
 * Min / Max Functions
 ********************************************************/
 
-int minValue(Moop* b, int cpuval, int alpha, int beta, int depth){
+int minValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim, int depth, int maxDepth){
 
 	/* Set opponent to have the opposite value of the CPU
 	 * e.g. if CPU is Black, opponent is White */
 	int oppoval = (cpuval * -1);
 
+	float e_tim = ((float)clock()-tim)/CLOCKS_PER_SEC;
+
 	// if termininumal case, return utility
-	if(b->full_board() || (!b->has_valid_move(cpuval) && !b->has_valid_move(oppoval)) ||depth > 2)
+	if(b->full_board() || (!b->has_valid_move(cpuval) && !b->has_valid_move(oppoval)) || e_tim > 14.95 || depth > maxDepth)
 	{
     cout << b->corner_occupancy();
 		/* IF CPU is Black, return result of score function */
@@ -302,7 +329,7 @@ int minValue(Moop* b, int cpuval, int alpha, int beta, int depth){
 	// if no valid move exists for the oponent, let the cpu play again
 	else if(!b->has_valid_move(oppoval))
 	{
-		return maxValue(b, cpuval, alpha, beta, depth + 1);
+		return maxValue(b, cpuval, alpha, beta, tim, depth, maxDepth + 1);
 	}
 
 	// otherwise, recursive call to maxValue for all successors
@@ -320,14 +347,14 @@ int minValue(Moop* b, int cpuval, int alpha, int beta, int depth){
 			for(int j=1; j<9; j++){
 				/* If a move is valid, try it */
 				if(b->move_is_valid(i, j, oppoval)){
-					/* Coppy current board into the array */
+					/* Copy current board into the array */
 					test.push_back(new Moop(*b)); //may not work because test is a vector
 					/* Play in the free square */
 					test[count]->play_square(i, j, oppoval);
 					/* Print current board */
 					//cout << test[count]->toString();
 					/* Find the maximumimum value from playing in the given square */
-					t = maxValue(test[count], cpuval, alpha, beta, depth + 1);
+					t = maxValue(test[count], cpuval, alpha, beta, tim, depth, maxDepth + 1);
 					/* If the current value t is less than the mininumimum value
 					 * t is the new mininumimum value */
 					if(t < mininum)
@@ -351,9 +378,10 @@ int minValue(Moop* b, int cpuval, int alpha, int beta, int depth){
 	}
 }
 
-int maxValue(Moop* b, int cpuval, int alpha, int beta, int depth){
+int maxValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim, int depth, int maxDepth){
 	// if termininumal case, return utility
-	if(b->full_board() || (!b->has_valid_move(1) && !b->has_valid_move(-1)) || depth > 2)
+	float e_tim = ((float)clock()-tim)/CLOCKS_PER_SEC;
+	if(b->full_board() || (!b->has_valid_move(1) && !b->has_valid_move(-1)) || e_tim > 14.95 || depth > maxDepth)
 	{
 		/* IF CPU is Black, return result of score function */
 		if(cpuval == 1) return b->evaluation_output();
@@ -364,7 +392,7 @@ int maxValue(Moop* b, int cpuval, int alpha, int beta, int depth){
 	// if no valid move exists for the cpu, let the opponent play again
 	else if(!b->has_valid_move(cpuval))
 	{
-		return minValue(b, cpuval, alpha, beta, depth + 1);
+		return minValue(b, cpuval, alpha, beta, tim, depth, maxDepth + 1);
 	}
 
 	// otherwise, recursive call to minValue for all successors
@@ -389,7 +417,7 @@ int maxValue(Moop* b, int cpuval, int alpha, int beta, int depth){
 					/* Print current board */
 					//cout << test[count]->toString();
 					/* Find the mininumimum value from playing in the given square */
-					t = minValue(test[count], cpuval, alpha, beta, depth + 1);
+					t = minValue(test[count], cpuval, alpha, beta, tim, depth, maxDepth + 1);
 					/* If the current value t is greater than the maximumimum value
 					 * t is the new maximumimum value */
 					if(t > maximum) 
@@ -416,11 +444,13 @@ int maxValue(Moop* b, int cpuval, int alpha, int beta, int depth){
 /********************************************************
 * CPU Move Function
 ********************************************************/
-bool cpu_MiniMax_Move(Moop* b, int cpuval){
+bool cpu_MiniMax_Move(Moop* b, int cpuval, int &row, int &col){
 
 	if(!b->has_valid_move(cpuval))
 	{
 		cout << "Computer passes." << endl;
+		row = -1; 
+		col = -1;
 		return false;
 	}
 
@@ -437,40 +467,54 @@ bool cpu_MiniMax_Move(Moop* b, int cpuval){
 	int t;
 	/* Move stores the current best possible move */
 	int move[2];
+
+	//start timer to keep checking under 15 seconds
+	clock_t tim = clock();
+	float e_tim = ((float)clock()-tim)/CLOCKS_PER_SEC;
+
+	//Depth tracker for iterative deepening
+	int maxDepth = 0;
 	
-	//get minValue for every possible move
-	for(int i=1; i<9; i++){
-		for(int j=1; j<9; j++){
-			/* If a square is empty, try to play there */
-			if(b->move_is_valid(i, j, cpuval)){
-				/* Copy current board into the vector */
-				test.push_back(new Moop(*b));
-				/* Play in the free square */
-				test[count]->play_square(i, j, cpuval);
-				/* Find the mininumimum value from playing in the given square */
-				t = minValue(test[count], cpuval, alpha, beta, 1);
-				//if minValue for a move is greater than current maximum,
-				//CPU will make that move
-				if(t > maximum)
-				{
-					maximum = t;
-					move[0] = i;
-					move[1] = j;
-					if (maximum >= beta)
+	while (e_tim < 14.95)
+	{
+		//get minValue for every possible move
+		for(int i=1; i<9; i++){
+			for(int j=1; j<9; j++){
+				/* If a square is empty, try to play there */
+				if(b->move_is_valid(i, j, cpuval)){
+					/* Copy current board into the vector */
+					test.push_back(new Moop(*b));
+					/* Play in the free square */
+					test[count]->play_square(i, j, cpuval);
+					/* Find the mininumimum value from playing in the given square */
+					t = minValue(test[count], cpuval, alpha, beta, tim, 1, maxDepth);
+					//if minValue for a move is greater than current maximum,
+					//CPU will make that move
+					if(t > maximum)
 					{
-						b->play_square(move[0], move[1], cpuval);
-						return true;
+						maximum = t;
+						move[0] = i;
+						move[1] = j;
+						if (maximum >= beta)
+						{
+							b->play_square(move[0], move[1], cpuval);
+							return true;
+						}
+						alpha = max(alpha, maximum);
 					}
-					alpha = max(alpha, maximum);
+					count++;
 				}
-				count++;
 			}
 		}
+		e_tim = ((float)clock()-tim)/CLOCKS_PER_SEC;
+		maxDepth++;
 	}
 	/* Delete all of the test boards */
 	for(int k=0; k<count; k++) delete test[k];
 	//CPU making move
 	b->play_square(move[0], move[1], cpuval);
+	row = move[0];
+	col = move[1];
 	return true;
 }
 
@@ -480,6 +524,7 @@ bool cpu_MiniMax_Move(Moop* b, int cpuval){
 
 void play() {
 	Moop * b = new Moop();
+	int test1, test2;
 	int humanPlayer = 1;
 	int cpuPlayer = -1;
 
@@ -520,7 +565,7 @@ void play() {
 			break;
 		else {
 			cout << b->toString() << "..." << endl;
-			if(cpu_MiniMax_Move(b, cpuPlayer))
+			if(cpu_MiniMax_Move(b, cpuPlayer, test1, test2))
 				consecutivePasses=0;
 			else
 				consecutivePasses++;
@@ -542,11 +587,11 @@ void play() {
 * Main Function
 ********************************************************/
 
-int main(int argc, char * argv[])
+/*int main(int argc, char * argv[])
 {
 	play();
 	return 0;
-}
+} */
 
 /********************************************************
 * Old Functions (To Be Deleted)
