@@ -169,24 +169,26 @@ int Moop::get_square(int row, int col) {
 // where B and W are the number of pieces for each player, respectively
 // if White has more pieces, the difference is
 // p = -100 * W  / (B + W)
+// if B == W, return 0
 float Moop::piece_difference() {
-        int ySum = 0;
-        int xSum = 0;
+        int blackCount = 0;
+        int whiteCount = 0;
         for (int i = 0; i < 8; i++) {
                 for (int j = 0; j < 8; j++) {
                         if (squares[i][j] < 0) {
-                                ySum++;
+                                whiteCount++;
                         } else {
-                                xSum++;
+                                blackCount++;
                         }
                 }
         }
         //cout << xSum << ySum << endl;
-        if (xSum > ySum) {
-                return (100.0 * xSum) / (xSum + ySum);
-        } else {
-                return (-100.0 * ySum) / (xSum + ySum);
+        if (blackCount > whiteCount) {
+                return (100.0 * blackCount) / (blackCount + whiteCount);
+        } else if (blackCount < whiteCount) {
+                return (-100.0 * whiteCount) / (blackCount + whiteCount);
         }
+        return 0;
 }
 
 // returns the corner occupancy of the board
@@ -310,6 +312,7 @@ float Moop::evaluation_output() {
 
 int minValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim, int depth, int maxDepth){
 
+  //cout << maxDepth << endl;
 	/* Set opponent to have the opposite value of the CPU
 	 * e.g. if CPU is Black, opponent is White */
 	int oppoval = (cpuval * -1);
@@ -319,7 +322,6 @@ int minValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim, int depth, i
 	// if termininumal case, return utility
 	if(b->full_board() || (!b->has_valid_move(cpuval) && !b->has_valid_move(oppoval)) || e_tim > 14.95 || depth > maxDepth)
 	{
-    cout << b->corner_occupancy();
 		/* IF CPU is Black, return result of score function */
 		if(cpuval == 1) return b->evaluation_output();
 		/* If CPU is White, return opposite of score function */
@@ -381,6 +383,7 @@ int minValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim, int depth, i
 int maxValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim, int depth, int maxDepth){
 	// if termininumal case, return utility
 	float e_tim = ((float)clock()-tim)/CLOCKS_PER_SEC;
+  //cout << maxDepth << endl;;
 	if(b->full_board() || (!b->has_valid_move(1) && !b->has_valid_move(-1)) || e_tim > 14.95 || depth > maxDepth)
 	{
 		/* IF CPU is Black, return result of score function */
@@ -473,7 +476,7 @@ bool cpu_MiniMax_Move(Moop* b, int cpuval, int &row, int &col){
 	float e_tim = ((float)clock()-tim)/CLOCKS_PER_SEC;
 
 	//Depth tracker for iterative deepening
-	int maxDepth = 0;
+	int maxDepth = 1;
 	
 	while (e_tim < 14.95)
 	{
@@ -508,6 +511,7 @@ bool cpu_MiniMax_Move(Moop* b, int cpuval, int &row, int &col){
 		}
 		e_tim = ((float)clock()-tim)/CLOCKS_PER_SEC;
 		maxDepth++;
+    //cout << maxDepth << endl;
 	}
 	/* Delete all of the test boards */
 	for(int k=0; k<count; k++) delete test[k];
@@ -587,11 +591,11 @@ void play() {
 * Main Function
 ********************************************************/
 
-/*int main(int argc, char * argv[])
+int main(int argc, char * argv[])
 {
 	play();
 	return 0;
-} */
+} 
 
 /********************************************************
 * Old Functions (To Be Deleted)
