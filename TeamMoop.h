@@ -10,6 +10,7 @@ class Moop {
 
 public:
 	Moop();
+	Moop(const Moop& b);
 	std::string toString();
 	bool play_square(int, int, int);
 	bool play_square(int&, int&);
