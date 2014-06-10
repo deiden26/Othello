@@ -116,7 +116,7 @@ bool Moop::play_square(int row, int col, int val) {
 //Makes computer make its move and returns the computer's move in row, and col
 bool Moop::play_square(int &row, int &col){
 	if (row != 0 && col != 0) {
-		// Play for the computer 
+		// Play for the opponent 
 		if (isEmpty) {
 			isEmpty = false;
 			cpuValue = -1;
@@ -177,7 +177,8 @@ float Moop::piece_difference() {
                 for (int j = 0; j < 8; j++) {
                         if (squares[i][j] < 0) {
                                 whiteCount++;
-                        } else {
+                        } 
+                        else if (squares[i][j] > 0) {
                                 blackCount++;
                         }
                 }
@@ -247,7 +248,7 @@ float Moop::frontier_disc_ratio() {
                               if (is_frontier_disc(i, j))
                                       whiteFrontierCount++;
                       }
-                      else {
+                      else if (squares[i][j] > 0) {
                               if (is_frontier_disc(i, j))
                                       blackFrontierCount++;
                       }
@@ -261,7 +262,14 @@ float Moop::frontier_disc_ratio() {
 }
 
 // EMPIRICAL GAME POSITION WEIGHTING BOARD
-static const int weighting_board_heuristic[8][8] = {{20, -3, 11, 8, 8, 11, -3, 20}, {-3, -7, -4, 1, 1, -4, -7, -3}, {11, -4, 2, 2, 2, 2, -4, 11}, {8, 1, 2, -3, -3, 2, 1, 8}, {8, 1, 2, -3, -3, 2, 1, 8}, {11, -4, 2, 2, 2, 2, -4, 11}, {-3, -7, -4, 1, 1, -4, -7, -3}, {20, -3, 11, 8, 8, 11, -3, 20}};
+static const int weighting_board_heuristic[8][8] =	{{20, -3, 11, 8, 8, 11, -3, 20},
+													{-3, -7, -4, 1, 1, -4, -7, -3},
+													{11, -4, 2, 2, 2, 2, -4, 11},
+													{8, 1, 2, -3, -3, 2, 1, 8},
+													{8, 1, 2, -3, -3, 2, 1, 8},
+													{11, -4, 2, 2, 2, 2, -4, 11},
+													{-3, -7, -4, 1, 1, -4, -7, -3},
+													{20, -3, 11, 8, 8, 11, -3, 20}};
 
 // calculated for black player
 int Moop::board_position_value() {
@@ -288,9 +296,9 @@ float Moop::mobility() {
               }
       } 
       if (blackMoves > whiteMoves)
-              return (-100.0 * blackMoves) / (blackMoves + whiteMoves);
+              return (100.0 * blackMoves) / (blackMoves + whiteMoves);
       else if (blackMoves < whiteMoves)
-              return (100.0 * whiteMoves) / (blackMoves + whiteMoves);
+              return (-100.0 * whiteMoves) / (blackMoves + whiteMoves);
       return 0;
 }
 
@@ -311,16 +319,24 @@ float Moop::evaluation_output() {
 ********************************************************/
 
 int minValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim, int depth, int maxDepth){
-
-  //cout << maxDepth << endl;
 	/* Set opponent to have the opposite value of the CPU
 	 * e.g. if CPU is Black, opponent is White */
 	int oppoval = (cpuval * -1);
 
+	//Calculate how much time has passed
 	float e_tim = ((float)clock()-tim)/CLOCKS_PER_SEC;
 
-	// if termininumal case, return utility
-	if(b->full_board() || (!b->has_valid_move(cpuval) && !b->has_valid_move(oppoval)) || e_tim > 14.95 || depth > maxDepth)
+	// if termininumal case, return count to see who won
+	if(b->full_board() || (!b->has_valid_move(cpuval) && !b->has_valid_move(oppoval)) )
+	{
+		/* IF CPU is Black, return result of score function */
+		if(cpuval == 1) return (b->score() * 10000);
+		/* If CPU is White, return opposite of score function */
+		else return (b->score() * -10000);
+	}
+
+	// If the recusion has simply reached maximum depth, return utility
+	else if (e_tim > 14.95 || depth > maxDepth)
 	{
 		/* IF CPU is Black, return result of score function */
 		if(cpuval == 1) return b->evaluation_output();
@@ -344,7 +360,7 @@ int minValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim, int depth, i
 		/* t is the value returned after trying a test move */
 		int t;
 		/* Min is the current mininumimum value returned */
-		int mininum = 100;
+		int mininum = 2147483647; //largest signed int value
 		for(int i=1; i<9; i++){
 			for(int j=1; j<9; j++){
 				/* If a move is valid, try it */
@@ -381,10 +397,20 @@ int minValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim, int depth, i
 }
 
 int maxValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim, int depth, int maxDepth){
-	// if termininumal case, return utility
+	//Calculate how much time has passed
 	float e_tim = ((float)clock()-tim)/CLOCKS_PER_SEC;
-  //cout << maxDepth << endl;;
-	if(b->full_board() || (!b->has_valid_move(1) && !b->has_valid_move(-1)) || e_tim > 14.95 || depth > maxDepth)
+
+	// if termininumal case, return count to see who won
+	if(b->full_board() || (!b->has_valid_move(1) && !b->has_valid_move(-1)) )
+	{
+		/* IF CPU is Black, return result of score function */
+		if(cpuval == 1) return (b->score() * 10000);
+		/* If CPU is White, return opposite of score function */
+		else return (b->score() * -10000);
+	}
+
+	// If the recusion has simply reached maximum depth, return utility
+	else if (e_tim > 14.95 || depth > maxDepth)
 	{
 		/* IF CPU is Black, return result of score function */
 		if(cpuval == 1) return b->evaluation_output();
@@ -408,7 +434,7 @@ int maxValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim, int depth, i
 		/* t is the value returned after trying a test move */
 		int t;
 		/* Max is the current maximumimum value returned */
-		int maximum = -100;
+		int maximum = -2147483648; //smallest int value
 		for(int i=1; i<9; i++){
 			for(int j=1; j<9; j++){
 				/* If a move is valid, try it */
@@ -458,14 +484,14 @@ bool cpu_MiniMax_Move(Moop* b, int cpuval, int &row, int &col){
 	}
 
 	/* Set initial alpha and beta */
-	int alpha = -100;
-	int beta = 100;
+	int alpha = -2147483648; //smallest int value
+	int beta = 2147483647; //largest int value
 	/* Create a vector of possible boards */
 	vector <Moop*> test;
 	/* Create a counter for the number of boards attempted */
 	int count = 0;
 	/* Max is the current maximumimum value returned */
-	int maximum = -100;
+	int maximum = -2147483648; //smallest int value
 	/* t is the value returned after trying a test move */
 	int t;
 	/* Move stores the current best possible move */
@@ -517,6 +543,9 @@ bool cpu_MiniMax_Move(Moop* b, int cpuval, int &row, int &col){
 	for(int k=0; k<count; k++) delete test[k];
 	//CPU making move
 	b->play_square(move[0], move[1], cpuval);
+	// Visual output 
+	cout << b->toString();
+	cout << "time: " << ((float)clock()-tim)/CLOCKS_PER_SEC << ", eval: " << b->evaluation_output() << endl << endl;
 	row = move[0];
 	col = move[1];
 	return true;
@@ -590,13 +619,13 @@ void play() {
 /********************************************************
 * Main Function
 ********************************************************/
-
+/*
 int main(int argc, char * argv[])
 {
 	play();
 	return 0;
 } 
-
+*/
 /********************************************************
 * Old Functions (To Be Deleted)
 ********************************************************/
