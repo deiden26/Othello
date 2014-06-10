@@ -336,7 +336,7 @@ int minValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim, int depth, i
 	}
 
 	// If the recusion has simply reached maximum depth, return utility
-	else if (e_tim > 14.95 || depth > maxDepth)
+	else if (e_tim > 14 || depth > maxDepth)
 	{
 		/* IF CPU is Black, return result of score function */
 		if(cpuval == 1) return b->evaluation_output();
@@ -410,7 +410,7 @@ int maxValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim, int depth, i
 	}
 
 	// If the recusion has simply reached maximum depth, return utility
-	else if (e_tim > 14.95 || depth > maxDepth)
+	else if (e_tim > 14 || depth > maxDepth)
 	{
 		/* IF CPU is Black, return result of score function */
 		if(cpuval == 1) return b->evaluation_output();
@@ -504,7 +504,7 @@ bool cpu_MiniMax_Move(Moop* b, int cpuval, int &row, int &col){
 	//Depth tracker for iterative deepening
 	int maxDepth = 1;
 	
-	while (e_tim < 14.95)
+	while (e_tim < 14)
 	{
 		//get minValue for every possible move
 		for(int i=1; i<9; i++){
