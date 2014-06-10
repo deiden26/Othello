@@ -13,8 +13,9 @@
 
 using namespace std;
 
-#define TIMELIMIT 14.9
+#define TIMELIMIT 1
 bool reachedEnd = false;
+
 
 /********************************************************
 * Board Class Methods
@@ -352,6 +353,7 @@ int minValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim, int depth, i
 	// If the recusion has simply reached maximum depth, return utility
 	else if (e_tim > TIMELIMIT || depth > maxDepth)
 	{
+		reachedEnd = false;
 		/* IF CPU is Black, return result of score function */
 		if(cpuval == 1) return b->evaluation_output();
 		/* If CPU is White, return opposite of score function */
@@ -427,6 +429,7 @@ int maxValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim, int depth, i
 	// If the recusion has simply reached maximum depth, return utility
 	else if (e_tim > TIMELIMIT || depth > maxDepth)
 	{
+		reachedEnd = false;
 		/* IF CPU is Black, return result of score function */
 		if(cpuval == 1) return b->evaluation_output();
 		/* If CPU is White, return opposite of score function */
@@ -519,7 +522,7 @@ bool cpu_MiniMax_Move(Moop* b, int cpuval, int &row, int &col){
 	//Depth tracker for iterative deepening
 	int maxDepth = 1;
 	
-	while ((e_tim < TIMELIMIT) && !reachedEnd )
+	while (e_tim < TIMELIMIT && !reachedEnd)
 	{
 		//get minValue for every possible move
 		for(int i=1; i<9; i++){
@@ -561,7 +564,7 @@ bool cpu_MiniMax_Move(Moop* b, int cpuval, int &row, int &col){
 	// Visual output 
 	cout << b->toString();
 	cout << "time: " << ((float)clock()-tim)/CLOCKS_PER_SEC << ", eval: " << b->evaluation_output() << endl << endl;
-	//Reset reachedEnd
+	//Reset reachEnd
 	reachedEnd = false;
 	//Output move
 	row = move[0];
