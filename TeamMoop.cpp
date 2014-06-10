@@ -156,7 +156,7 @@ float Moop::piece_difference() {
                         }
                 }
         }
-        cout << xSum << ySum << endl;
+        //cout << xSum << ySum << endl;
         if (xSum > ySum) {
                 return (100.0 * xSum) / (xSum + ySum);
         } else {
@@ -167,7 +167,115 @@ float Moop::piece_difference() {
 // returns the corner occupancy of the board
 // corners cannot be flipped, so they are strong positions
 int Moop::corner_occupancy() {
-       return 25 * (squares[0][0] + squares[0][7] + squares[7][0] + squares[7][7]);
+      return 25 * (squares[0][0] + squares[0][7] + squares[7][0] + squares[7][7]);
+}
+
+// returns the corner closeness of the board
+// pieces close to empty corners are bad, because they give
+// the opponent an opportunity to capture the corner
+float Moop::corner_closeness() {
+      float closeness_total = 0;
+      if (squares[0][0] == 0) 
+              closeness_total += -12.5 * (squares[1][0] + squares[0][1] + squares[1][1]);
+      if (squares[0][7] == 0) 
+              closeness_total += -12.5 * (squares[1][7] + squares[0][6] + squares[1][6]);
+      if (squares[7][0] == 0) 
+              closeness_total += -12.5 * (squares[7][1] + squares[6][0] + squares[6][1]);
+      if (squares[7][7] == 0) 
+              closeness_total += -12.5 * (squares[6][7] + squares[7][6] + squares[6][6]);
+      return closeness_total;
+}
+
+// frontier discs are discs that are adjacent to empty square(s)
+// the row and column conform to a zero-indexed board, NOT a one-indexed board
+bool Moop::is_frontier_disc(int row, int col) {
+      if (row > 7 || col > 7)
+              return false;
+      if (!squares[row][col])
+        // an empty square isn't a frontier disc
+              return false;
+      // we won't consider corners to be frontier discs either
+      if ((row == 0 && col == 0) || (row == 0 && col == 7) || (row == 7 && col == 0) || (row == 7 && col == 7))
+              return false;
+      // catching edges so they don't go beyond the board's bounds
+      // on the other hand, a disc on an edge row can only be flanked
+      // through adjacent columns, for example, so we won't count diagonals or adjacent rows either
+      if (row == 0 || row == 7)
+              return (!squares[row][col+1] || !squares[row][col-1]);
+      if (col == 0 || col == 7)
+              return (!squares[row+1][col] || !squares[row-1][col]);
+      // default case: check all 8 adjacent squares of a disk
+      return (!squares[row+1][col] || !squares[row+1][col+1] || !squares[row+1][col-1] || !squares[row][col+1] || !squares[row-1][col+1] || !squares[row-1][col-1] || !squares[row-1][col] || !squares[row][col-1]);
+}
+
+// calculates for black player
+// normalized to be in the range [-100, 100]. See piece_difference for full
+// explanation on the scaling calculation
+float Moop::frontier_disc_ratio() {
+      int blackFrontierCount = 0;
+      int whiteFrontierCount = 0;
+      for (int i = 0; i < 8; i++) {
+              for (int j = 0; j < 8; j++) {
+                      if (squares[i][j] < 0) {
+                              if (is_frontier_disc(i, j))
+                                      whiteFrontierCount++;
+                      }
+                      else {
+                              if (is_frontier_disc(i, j))
+                                      blackFrontierCount++;
+                      }
+              }
+      }
+      if (blackFrontierCount > whiteFrontierCount)
+              return (-100.0 * blackFrontierCount) / (blackFrontierCount + whiteFrontierCount);
+      else if (blackFrontierCount < whiteFrontierCount)
+              return (100.0 * whiteFrontierCount) / (blackFrontierCount + whiteFrontierCount);
+      return 0;
+}
+
+// EMPIRICAL GAME POSITION WEIGHTING BOARD
+static const int weighting_board_heuristic[8][8] = {{20, -3, 11, 8, 8, 11, -3, 20}, {-3, -7, -4, 1, 1, -4, -7, -3}, {11, -4, 2, 2, 2, 2, -4, 11}, {8, 1, 2, -3, -3, 2, 1, 8}, {8, 1, 2, -3, -3, 2, 1, 8}, {11, -4, 2, 2, 2, 2, -4, 11}, {-3, -7, -4, 1, 1, -4, -7, -3}, {20, -3, 11, 8, 8, 11, -3, 20}};
+
+// calculated for black player
+int Moop::board_position_value() {
+      int total = 0;
+      for (int i = 0; i < 8; i++) {
+              for (int j = 0; j < 8; j++) {
+                      total += (weighting_board_heuristic[i][j] * squares[i][j]);
+              }
+      }
+      return total;
+}
+
+// calculated for black player
+float Moop::mobility() {
+      int whiteMoves = 0;
+      int blackMoves = 0;
+      // uses the one-indexed has_valid_move function, so we one-index here as well
+      for (int i = 1; i < 9; i++) {
+              for (int j = 1; j < 9; j++) {
+                      if (move_is_valid(i, j, 1))
+                              blackMoves++;
+                      if (move_is_valid(i, j, -1))
+                              whiteMoves++;
+              }
+      } 
+      if (blackMoves > whiteMoves)
+              return (-100.0 * blackMoves) / (blackMoves + whiteMoves);
+      else if (blackMoves < whiteMoves)
+              return (100.0 * whiteMoves) / (blackMoves + whiteMoves);
+      return 0;
+}
+
+// adds a final weighting onto all the above heuristics
+float Moop::evaluation_output() {
+      float difference = piece_difference();
+      int corners = corner_occupancy();
+      float near_corners = corner_closeness();
+      float move_mobility = mobility();
+      float frontier_ratio = frontier_disc_ratio();
+      float general_position = board_position_value();
+      return (10.0 * difference + 801.724 * corners + 382.026 * near_corners + 78.922 * move_mobility + 74.396 * frontier_ratio + 10 * general_position);
 }
 
 
@@ -184,11 +292,11 @@ int minValue(Moop* b, int cpuval, int alpha, int beta, int depth){
 	// if termininumal case, return utility
 	if(b->full_board() || (!b->has_valid_move(cpuval) && !b->has_valid_move(oppoval)) ||depth > 2)
 	{
-                cout << b->corner_occupancy();
+    cout << b->corner_occupancy();
 		/* IF CPU is Black, return result of score function */
-		if(cpuval == 1) return b->score();
+		if(cpuval == 1) return b->evaluation_output();
 		/* If CPU is White, return opposite of score function */
-		else return (b->score() * -1);
+		else return (b->evaluation_output() * -1);
 	}
 
 	// if no valid move exists for the oponent, let the cpu play again
@@ -248,9 +356,9 @@ int maxValue(Moop* b, int cpuval, int alpha, int beta, int depth){
 	if(b->full_board() || (!b->has_valid_move(1) && !b->has_valid_move(-1)) || depth > 2)
 	{
 		/* IF CPU is Black, return result of score function */
-		if(cpuval == 1) return b->score();
+		if(cpuval == 1) return b->evaluation_output();
 		/* If CPU is White, return opposite of score function */
-		else return (b->score() * -1);
+		else return (b->evaluation_output() * -1);
 	}
 
 	// if no valid move exists for the cpu, let the opponent play again

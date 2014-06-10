@@ -16,8 +16,14 @@ public:
 	int score();
 	bool full_board();
 	bool has_valid_move(int);
-        float piece_difference();
-        int corner_occupancy();
+  float piece_difference();
+  int corner_occupancy();
+  float corner_closeness();
+  bool is_frontier_disc(int, int);      
+  float frontier_disc_ratio();
+  int board_position_value();
+  float mobility();
+  float evaluation_output();
 };
 
 /********************************************************
