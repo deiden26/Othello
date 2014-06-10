@@ -13,6 +13,8 @@
 
 using namespace std;
 
+#define TIMELIMIT 13.90
+
 /********************************************************
 * Board Class Methods
 ********************************************************/
@@ -337,7 +339,7 @@ int minValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim, int depth, i
 	}
 
 	// If the recusion has simply reached maximum depth, return utility
-	else if (e_tim > 14 || depth > maxDepth)
+	else if (e_tim > TIMELIMIT || depth > maxDepth)
 	{
 		/* IF CPU is Black, return result of score function */
 		if(cpuval == 1) return b->evaluation_output();
@@ -411,7 +413,7 @@ int maxValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim, int depth, i
 	}
 
 	// If the recusion has simply reached maximum depth, return utility
-	else if (e_tim > 14 || depth > maxDepth)
+	else if (e_tim > TIMELIMIT || depth > maxDepth)
 	{
 		/* IF CPU is Black, return result of score function */
 		if(cpuval == 1) return b->evaluation_output();
@@ -505,7 +507,7 @@ bool cpu_MiniMax_Move(Moop* b, int cpuval, int &row, int &col){
 	//Depth tracker for iterative deepening
 	int maxDepth = 1;
 	
-	while (e_tim < 14)
+	while (e_tim < TIMELIMIT)
 	{
 		//get minValue for every possible move
 		for(int i=1; i<9; i++){
@@ -620,13 +622,13 @@ void play() {
 /********************************************************
 * Main Function
 ********************************************************/
-
+/*
 int main(int argc, char * argv[])
 {
 	play();
 	return 0;
 } 
-
+*/
 /********************************************************
 * Old Functions (To Be Deleted)
 ********************************************************/

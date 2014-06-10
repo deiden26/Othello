@@ -35,6 +35,7 @@ int main(int argc, char * argv[])
 	bool continueGame[2];
 	continueGame[0] = continueGame[1] = true;
 	timeval start;
+	timeval t;
 	
 	if (flipBlack)
 	{
@@ -42,12 +43,16 @@ int main(int argc, char * argv[])
 		{
 			gettimeofday(&start, NULL);
 			continueGame[0] = playerOne->play_square(row, col);
+				//gettimeofday(&t, NULL);
+				//cout << "MatchTime: " << (t.tv_sec - start.tv_sec) << endl;
 			if (exceededTimeLimit(TIMELIMIT, start)){
                     cout<<"Black timed out"<<endl;
                     break;
             }
             gettimeofday(&start, NULL);
 			continueGame[1] = playerTwo->play_square(row, col);
+				//gettimeofday(&t, NULL);
+				//cout << "MatchTime: " << (t.tv_sec - start.tv_sec) << endl;
 			if (exceededTimeLimit(TIMELIMIT, start)){
                     cout<<"White timed out"<<endl;
                     break;
@@ -65,12 +70,16 @@ int main(int argc, char * argv[])
 		{
 			gettimeofday(&start, NULL);
 			continueGame[1] = playerTwo->play_square(row, col);
+				//gettimeofday(&t, NULL);
+				//cout << "MatchTime: " << (t.tv_sec - start.tv_sec) << endl;
 			if (exceededTimeLimit(TIMELIMIT, start)){
                     cout<<"Black timed out"<<endl;
                     break;
             }
 			gettimeofday(&start, NULL);
 			continueGame[0] = playerOne->play_square(row, col);
+				//gettimeofday(&t, NULL);
+				//cout << "MatchTime: " << (t.tv_sec - start.tv_sec) << endl;
 			if (exceededTimeLimit(TIMELIMIT, start)){
                     cout<<"White timed out"<<endl;
                     break;
