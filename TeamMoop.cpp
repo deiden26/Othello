@@ -396,7 +396,13 @@ int minValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim, int depth, i
 					{
 						mininum = t;
 						if (mininum <= alpha)
+						{
+							for(int k=0; k<count; k++)
+							{
+								delete test[k];
+							}
 							return mininum;
+						}
 						beta = min(beta, mininum);
 					}
 					count++;
@@ -472,7 +478,13 @@ int maxValue(Moop* b, int cpuval, int alpha, int beta, clock_t tim, int depth, i
 					{
 						maximum = t;
 						if (maximum >= beta)
+						{
+							for(int k=0; k<count; k++)
+							{
+								delete test[k];
+							}
 							return maximum;
+						}
 						alpha = max(alpha, maximum);
 					}
 					count++;
@@ -546,6 +558,10 @@ bool cpu_MiniMax_Move(Moop* b, int cpuval, int &row, int &col){
 						if (maximum >= beta)
 						{
 							b->play_square(move[0], move[1], cpuval);
+							for(int k=0; k<count; k++)
+							{
+								delete test[k];
+							}
 							return true;
 						}
 						alpha = max(alpha, maximum);
